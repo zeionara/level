@@ -1,4 +1,11 @@
-from click import group, argument
+from os import environ as env
+
+from click import group, argument, option
+
+from .Sheets import Sheets
+
+
+FILE = env['LEVEL_FILE']
 
 
 @group()
@@ -7,9 +14,10 @@ def main():
 
 
 @main.command()
-@argument('sheet', type = str, default = 'main')
-def pull(sheet):
-    print(sheet)
+@argument('cells', type = str, default = 'A1:B2')
+@option('--sheet', '-s', help = 'name of sheet from which to select cells', type = str, default = 'main')
+def pull(cells: str, sheet: str):
+    Sheets()[FILE][sheet][cells] | print
 
 
 if __name__ == '__main__':
