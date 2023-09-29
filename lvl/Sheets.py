@@ -9,7 +9,7 @@ from googleapiclient.discovery import build, Resource
 
 
 SCOPES = (
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
+    'https://www.googleapis.com/auth/spreadsheets',
 )
 
 
@@ -49,6 +49,16 @@ class Sheet:
         ).execute().get('values', [])
 
         return Cells(range = range_, values = values)
+
+    def __setitem__(self, cells: str, values: str):
+        self.service.values().update(
+            spreadsheetId = self.file,
+            range = Range(self.key, cells).description,
+            valueInputOption = 'RAW',
+            body = {
+                'values': values
+            }
+        ).execute()
 
 
 class File:

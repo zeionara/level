@@ -17,7 +17,10 @@ def main():
 @argument('cells', type = str, default = 'A1:B2')
 @option('--sheet', '-s', help = 'name of sheet from which to select cells', type = str, default = 'main')
 def pull(cells: str, sheet: str):
-    Sheets()[FILE][sheet][cells] | print
+    sheets = Sheets()[FILE][sheet]
+
+    sheets[cells] | print
+    # sheets['d1:e2'] = [['one', 'two'], ['three', 'four']]
 
 
 if __name__ == '__main__':
