@@ -1,2 +1,4 @@
 **/*.pyc
-assets/*
+
+assets/cert.json
+assets/token.json
