@@ -1,5 +1,5 @@
 from os import path
-from dataclasses import dataclass
+# from dataclasses import dataclass
 
 from google.auth.transport.requests import Request
 from google.auth.exceptions import RefreshError
@@ -9,19 +9,21 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build, Resource
 
 from .Range import Range
+# from .Cell import Cell
+from .Grid import Grid  # , Atom
 
 SCOPES = (
     'https://www.googleapis.com/auth/spreadsheets',
 )
 
 
-@dataclass
-class Cells:
-    range: str
-    values: list[list[str]]
-
-    def __or__(self, call: callable):
-        return call(self.values)
+# @dataclass
+# class Cells:
+#     range: str
+#     values: list[list[str]]
+#
+#     def __or__(self, call: callable):
+#         return call(self.values)
 
 
 class Sheet:
@@ -34,7 +36,7 @@ class Sheet:
     #     return f'{self.key}!{cells}'
 
     def __getitem__(self, cells: str):
-        range_ = Range.from_cells(self.key, cells)
+        # range_ = Range.from_cells(self.key, cells)
 
         items = self.service.get(
             spreadsheetId = self.file,
@@ -46,23 +48,47 @@ class Sheet:
             props = sheet['properties']
 
             if props['title'] == self.key:
-                for merge in sheet['merges']:
-                    mm = Range.from_merge(self.key, merge)
-                print()
+                return Grid.from_google(self.key, Range.from_cells(self.key, cells), sheet)
 
-                for row, locations in zip(sheet['data'][0]['rowData'], range_.grid):
-                    for cell, location in zip(row['values'], locations):
-                        print(cell, location, location in mm)
+                # merges = []
+                # merge_to_cell = {}
 
-                    print()
+                # for merge in sheet['merges']:
+                #     merges.append(merge_range := Range.from_merge(self.key, merge))
+                #     merge_to_cell[merge_range.description] = None
 
-        values = self.service.values().get(
-            spreadsheetId = self.file,
-            range = range_.description
-            # range = self._make_range(cells)
-        ).execute().get('values', [])
+                # # print(merges, merge_to_cell)
 
-        return Cells(range = range_, values = values)
+                # grid = []
+
+                # for row, locations in zip(sheet['data'][0]['rowData'], range_.grid):
+                #     line = []
+
+                #     for cell, location in zip(row['values'], locations):
+                #         for merge in merges:
+                #             if location in merge:
+                #                 if (cell_ := merge_to_cell[merge.description]) is None:
+                #                     merge_to_cell[merge.description] = cell_ = Cell.from_google(cell)
+
+                #                 line.append(Atom(location, cell_))
+                #                 break
+                #         else:
+                #             line.append(Atom(location, Cell.from_google(cell)))
+
+                #     grid.append(tuple(line))
+
+                # return Grid(
+                #     atoms = tuple(grid),
+                #     range = range_
+                # )
+
+        # values = self.service.values().get(
+        #     spreadsheetId = self.file,
+        #     range = range_.description
+        #     # range = self._make_range(cells)
+        # ).execute().get('values', [])
+
+        # return Cells(range = range_, values = values)
 
     def __setitem__(self, cells: str, values: str):
         self.service.values().update(
