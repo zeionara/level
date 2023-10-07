@@ -8,41 +8,11 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 from googleapiclient.discovery import build, Resource
 
-from .Location import Location
-
+from .Range import Range
 
 SCOPES = (
     'https://www.googleapis.com/auth/spreadsheets',
 )
-
-CELL_SEPARATOR = ':'
-SHEET_SEPARATOR = '!'
-
-
-class Range:
-
-    def __init__(self, sheet: str, cells: str):
-        self.sheet = sheet
-        self.cells = cells
-
-        locations = cells.split(CELL_SEPARATOR, maxsplit = 1)
-
-        assert len(locations) == 2, f'Incorrect range: {cells}'
-
-        first, last = locations
-
-        self.first = Location.from_description(first)
-        self.last = Location.from_description(last)
-
-        # loc = Location.from_description(first)
-        # print(loc.description)
-        # loc = Location.from_description('ab5')
-        # print(loc.description)
-
-    @property
-    def description(self):
-        # return f'{self.sheet}!{self.cells}'
-        return f'{self.sheet}{SHEET_SEPARATOR}{self.first.description}{CELL_SEPARATOR}{self.last.description}'
 
 
 @dataclass
@@ -64,28 +34,31 @@ class Sheet:
     #     return f'{self.key}!{cells}'
 
     def __getitem__(self, cells: str):
-        # items = self.service.get(
-        #     spreadsheetId = self.file,
-        #     ranges = [cells],
-        #     includeGridData = True
-        # ).execute()
+        range_ = Range.from_cells(self.key, cells)
 
-        # for sheet in items['sheets']:
-        #     props = sheet['properties']
+        items = self.service.get(
+            spreadsheetId = self.file,
+            ranges = [cells],
+            includeGridData = True
+        ).execute()
 
-        #     if props['title'] == self.key:
-        #         print(sheet['merges'])
-        #         print()
+        for sheet in items['sheets']:
+            props = sheet['properties']
 
-        #         for row in sheet['data'][0]['rowData']:
-        #             for cell in row['values']:
-        #                 print(cell)
+            if props['title'] == self.key:
+                for merge in sheet['merges']:
+                    mm = Range.from_merge(self.key, merge)
+                print()
 
-        #             print()
+                for row, locations in zip(sheet['data'][0]['rowData'], range_.grid):
+                    for cell, location in zip(row['values'], locations):
+                        print(cell, location, location in mm)
+
+                    print()
 
         values = self.service.values().get(
             spreadsheetId = self.file,
-            range = (range_ := Range(self.key, cells)).description
+            range = range_.description
             # range = self._make_range(cells)
         ).execute().get('values', [])
 
@@ -94,7 +67,7 @@ class Sheet:
     def __setitem__(self, cells: str, values: str):
         self.service.values().update(
             spreadsheetId = self.file,
-            range = Range(self.key, cells).description,
+            range = Range.from_cells(self.key, cells).description,
             valueInputOption = 'RAW',
             body = {
                 'values': values
