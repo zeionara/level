@@ -1,5 +1,9 @@
 # level
 
+<p align="center">
+    <img src="assets/logo.png"/>
+</p>
+
 Level - data formatting tool which allows to structure information stored as tables or in plain text using language models
 
 ## Set up environment
