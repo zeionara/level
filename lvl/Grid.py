@@ -33,9 +33,9 @@ class Grid:
                 if last_atom is not None and last_atom.cell == cell:
                     string.extend([' ', '<'])
                 elif last_line is not None and last_line[i].cell == cell:
-                    string.extend([' ', '^'])
+                    string.extend(['|', '^'])
                 else:
-                    string.extend(['|', cell.text])
+                    string.extend(['|', '-' if cell.text is None else cell.text])
 
                 last_atom = atom
 
@@ -59,9 +59,12 @@ class Grid:
         merges = []
         merge_to_cell = {}
 
-        for merge in data['merges']:
-            merges.append(merge_range := Range.from_merge(sheet, merge))
-            merge_to_cell[merge_range.description] = None
+        merges_ = data.get('merges')
+
+        if merges_ is not None:
+            for merge in merges_:
+                merges.append(merge_range := Range.from_merge(sheet, merge))
+                merge_to_cell[merge_range.description] = None
 
         # print(merges, merge_to_cell)
 
@@ -70,16 +73,20 @@ class Grid:
         for row, locations in zip(data['data'][0]['rowData'], range_.grid):
             line = []
 
-            for cell, location in zip(row['values'], locations):
-                for merge in merges:
-                    if location in merge:
-                        if (cell_ := merge_to_cell[merge.description]) is None:
-                            merge_to_cell[merge.description] = cell_ = Cell.from_google(cell)
+            if 'values' in row:
+                for cell, location in zip(row['values'], locations):
+                    for merge in merges:
+                        if location in merge:
+                            if (cell_ := merge_to_cell[merge.description]) is None:
+                                merge_to_cell[merge.description] = cell_ = Cell.from_google(cell)
 
-                        line.append(Atom(location, cell_))
-                        break
-                else:
-                    line.append(Atom(location, Cell.from_google(cell)))
+                            line.append(Atom(location, cell_))
+                            break
+                    else:
+                        line.append(Atom(location, Cell.from_google(cell)))
+            else:
+                for location in locations:
+                    line.append(Atom(location, Cell.empty()))
 
             grid.append(tuple(line))
 

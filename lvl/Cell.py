@@ -31,14 +31,18 @@ class Style:
         )
 
 
-@dataclass
 class Cell:
-    text: str
-    style: Style
+    def __init__(self, text: str, style: Style):
+        self.text = text
+        self.style = Style
 
     @classmethod
     def from_google(cls, data: dict):
         return cls(
-            text = str(tuple(data['userEnteredValue'].values())[0]),
-            style = Style.from_google(data['effectiveFormat'])
+            text = str(tuple(data['userEnteredValue'].values())[0]) if 'userEnteredValue' in data else None,
+            style = Style.from_google(data['effectiveFormat']) if 'effectiveFormat' in data else None
         )
+
+    @classmethod
+    def empty(cls):
+        return cls(None, None)
