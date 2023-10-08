@@ -3,6 +3,9 @@ from dataclasses import dataclass
 from .util import to_hex
 
 
+WHITE_COLOR_CODE = '#ffffff'
+
+
 @dataclass
 class Color:
     code: str
@@ -30,11 +33,15 @@ class Style:
             underline = text_style['underline']
         )
 
+    @property
+    def is_header(self):
+        return self.background.code != WHITE_COLOR_CODE
+
 
 class Cell:
     def __init__(self, text: str, style: Style):
         self.text = text
-        self.style = Style
+        self.style = style
 
     @classmethod
     def from_google(cls, data: dict):
@@ -46,3 +53,7 @@ class Cell:
     @classmethod
     def empty(cls):
         return cls(None, None)
+
+    @property
+    def is_header(self):
+        return False if self.style is None else self.style.is_header

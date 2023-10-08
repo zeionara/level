@@ -56,3 +56,8 @@ class Range:
             self.first.row <= location.row <= self.last.row and
             self.first.column <= location.column <= self.last.column
         )
+
+    def unshift(self, location: Location):
+        assert location in self, f'Location {location.description} is outside of range {self.description} - cannot unshift'
+
+        return location.row - self.first.row, location.column - self.first.column
